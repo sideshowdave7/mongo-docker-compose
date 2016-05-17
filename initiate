@@ -1,8 +1,8 @@
 #!/bin/bash
 
-for (( rs = 1; rs < 3; rs++ )); do
+for (( rs = 1; rs < 4; rs++ )); do
   echo "Intializing replica ${rs} set"
-  replicate="rs.initiate(); sleep(3000); rs.add(\"mongors${rs}n2\"); rs.add(\"mongors${rs}n3\"); rs.status();"
+  replicate="rs.initiate(); sleep(1000); rs.add(\"mongors${rs}n2\"); rs.add(\"mongors${rs}n3\"); cfg=rs.conf(); cfg.members[0][\"host\"] = \"mongors${rs}n1\"; rs.reconfig(cfg); rs.status();"
   echo ${replicate}
   docker exec -it mongodockercompose_mongors${rs}n1_1 bash -c "echo '${replicate}' | mongo"
 done
@@ -13,4 +13,4 @@ sleep 1
 
 rs1=$(docker ps -a | grep mongors1n1 | cut -d' ' -f1)
 rs2=$(docker ps -a | grep mongors2n1 | cut -d' ' -f1)
-docker exec -it mongodockercompose_mongos1_1 bash -c "echo \"sh.addShard('mongors1/${rs1}:27017'); sh.addShard('mongors2/${rs2}:27017');\" | mongo "
+docker exec -it mongodockercompose_mongos1_1 bash -c "echo \"sh.addShard('mongors1/mongors1n1:27017'); sh.addShard('mongors2/mongors2n1:27017');\" | mongo "
